@@ -8,14 +8,59 @@ const { ApolloServer, gql } = require('apollo-server');
 // Scalar Types -> String, Int, Boolean, Float e ID
 
 const typeDefs = gql`
+  type User {
+    _id: ID!
+    name: String!
+    email: String!
+    active: Boolean!
+  }
+
+  type Post {
+    _id: ID!
+    title: String!
+    content: String!
+    author: User!
+  }
+
+  # pode retornar users: [] mas não pode retornar users: [null]
   type Query {
     hello: String
+    users: [User]!
+    getUserByEmail(email: String): User!
+  }
+
+  type Mutation {
+    createUser(name: String!, email: String!): User!
   }
 `;
+
+const users = [
+  { _id: String(Math.random()), name: 'Cíntia 1', email: 'cintia1@teste.com', active: true },
+  { _id: String(Math.random()), name: 'Cíntia 2', email: 'cintia2@teste.com', active: false },
+  { _id: String(Math.random()), name: 'Cíntia 3', email: 'cintia3@teste.com', active: false },
+];
+
 const resolvers = {
   Query: {
-    hello: () => 'Hello world'
-  }
+    hello: () => 'Hello world',
+    users: () => users,
+    getUserByEmail: (_, args) => {
+      return users.find((user) => user.email === args.email);
+    },
+  },
+  Mutation: {
+    createUser: (_, args) => {
+      const newUser = {
+        _id: String(Math.random()),
+        name: args.name,
+        email: args.email,
+        active: true,
+      };
+
+      users.push(newUser);
+      return newUser;
+    }
+  },
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
